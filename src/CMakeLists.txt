@@ -1,0 +1,1 @@
+﻿add_executable(mgolc "main.cpp" "frontend.cpp" "frontend.h" "io.cpp" "io.h" "handler.cpp" "handler.h" "except.h"  )
