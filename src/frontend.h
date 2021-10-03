@@ -1,9 +1,8 @@
 #ifndef FRONTEND_H
 #define FRONTEND_H
 
-#include <string>
-#include <istream>
+#include <iostream>
 
-std::string compile(const std::istream& source);
+void compile(std::istream& source, std::ostream& output);
 
 #endif

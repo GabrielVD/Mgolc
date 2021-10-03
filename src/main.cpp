@@ -3,8 +3,6 @@
 #include "except.h"
 #include <iostream>
 
-using std::cout;
-using std::endl;
 using std::invalid_argument;
 
 void validate_arguments(int argc, const char* argv[]);

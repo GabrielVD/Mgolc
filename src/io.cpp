@@ -1,5 +1,5 @@
-#include "except.h"
 #include "io.h"
+#include "except.h"
 #include "frontend.h"
 #include <fstream>
 
@@ -9,16 +9,11 @@ using std::string;
 
 void compile(const char* filename)
 {
-	string code;
+	ifstream input(filename, ifstream::in);
+
+	if (!input.is_open())
 	{
-		ifstream input(filename, ifstream::in);
-
-		if (!input.is_open())
-		{
-			throw io_error(string("Error reading file: ") + filename);
-		}
-
-		code = compile(input);
+		throw io_error(string("Error reading file: ") + filename);
 	}
 
 	string output_path(string(filename) + ".c");
@@ -29,5 +24,5 @@ void compile(const char* filename)
 		throw io_error(string("Error writing to file: ") + output_path);
 	}
 
-	output << code;
+	compile(input, output);
 }

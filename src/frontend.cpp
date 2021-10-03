@@ -1,9 +1,10 @@
 #include "frontend.h"
+#include "lexical_test.h"
 
 using std::istream;
-using std::string;
+using std::ostream;
 
-string compile(const istream& source)
+void compile(istream& source, ostream& output)
 {
-	return string("test");
+	test(source, output);
 }

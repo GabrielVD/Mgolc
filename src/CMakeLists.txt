@@ -1,1 +1,1 @@
-﻿add_executable(mgolc "main.cpp" "frontend.cpp" "frontend.h" "io.cpp" "io.h" "handler.cpp" "handler.h" "except.h"  )
+﻿add_executable(mgolc "main.cpp" "frontend.cpp" "frontend.h" "io.cpp" "io.h" "handler.cpp" "handler.h" "except.h"   "scanner.cpp" "scanner.h" "token.h" "symbol.cpp" "symbol.h"    "token.cpp")
