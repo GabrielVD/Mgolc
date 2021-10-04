@@ -46,20 +46,19 @@ public:
 
 public:
 	scanner();
-	token next(std::istream& source);
+	token next(std::istream& source, symbol_table& symtable);
 
 private:
 	recognizer_t recognizer;
-	symbol_table symbol;
 	std::string lexeme;
 	int line{ 1 }, column{ 0 };
 	char previous_symbol{ 0 };
 
-	std::optional<token> process_symbol(std::istream& source);
-	std::optional<token> process_lexeme(states final_state, char err_symbol);
+	std::optional<token> process_symbol(std::istream& source, symbol_table& symtable);
+	std::optional<token> process_lexeme(states final_state, char err_symbol, symbol_table& symbol);
 	char next_symbol(std::istream& source) const;
 	void update_line_count();
-	token build_token(scanner::states last);
+	token build_token(scanner::states last, symbol_table& symbol);
 };
 
 #endif

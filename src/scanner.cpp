@@ -14,19 +14,19 @@ scanner::scanner() :
 {
 }
 
-token scanner::next(std::istream& source)
+token scanner::next(std::istream& source, symbol_table& symtable)
 {
 	std::optional<token> token;
 
 	do
 	{
-		token = process_symbol(source);
+		token = process_symbol(source, symtable);
 	} while (!token.has_value());
 
 	return token.value();
 }
 
-optional<token> scanner::process_symbol(istream& source)
+optional<token> scanner::process_symbol(istream& source, symbol_table& symtable)
 {
 	const auto symbol{ next_symbol(source) };
 	const auto previous_state{ recognizer.state() };
@@ -37,7 +37,7 @@ optional<token> scanner::process_symbol(istream& source)
 
 	if (recognizer.state() == states::sink)
 	{
-		result = process_lexeme(previous_state, symbol);
+		result = process_lexeme(previous_state, symbol, symtable);
 	}
 	else if (recognizer.state() != states::initial)
 	{
@@ -50,9 +50,12 @@ optional<token> scanner::process_symbol(istream& source)
 	return result;
 }
 
-std::optional<token> scanner::process_lexeme(states final_state, char err_symbol)
+std::optional<token> scanner::process_lexeme(
+	states final_state,
+	char err_symbol,
+	symbol_table& symtable)
 {
-	optional<token> result(build_token(final_state));
+	optional<token> result(build_token(final_state, symtable));
 	if (result.value().tclass == token::tclass_enum::comment)
 	{
 		result.reset();
@@ -87,7 +90,7 @@ void scanner::update_line_count()
 	}
 }
 
-token scanner::build_token(scanner::states last)
+token scanner::build_token(scanner::states last, symbol_table &symtable)
 {
 	token::tclass_enum tclass{ token::tclass_enum::error_invalid_symbol };
 	token::ttype_enum ttype{ token::ttype_enum::null };
@@ -171,7 +174,7 @@ token scanner::build_token(scanner::states last)
 
 	case scanner::states::id_accept:
 	{
-		auto id{ symbol.insert_query(token_lexeme) };
+		auto id{ symtable.insert_query(token_lexeme) };
 		id.line = line;
 		id.column = column;
 		return id;

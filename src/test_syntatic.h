@@ -1,5 +1,5 @@
-#ifndef LEXICAL_TEST_H
-#define LEXICAL_TEST_H
+#ifndef TEST_SYNTATIC_H
+#define TEST_SYNTATIC_H
 
 #include "scanner.h"
 #include <iostream>
@@ -13,9 +13,6 @@ inline void test(std::istream& source, std::ostream& output)
 	{
 		auto token{ scanner.next(source) };
 		is_eof = token.is_eof();
-
-		output << token << "\n\n";
-		if (token.is_error()) { output << token.describe() << "\n\n"; }
 	} while (!is_eof);
 }
 
