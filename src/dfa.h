@@ -4,7 +4,6 @@
 #include <array>
 #include <cassert>
 #include <algorithm>
-#include <type_traits>
 
 template<
 	class TState,
