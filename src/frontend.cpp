@@ -1,5 +1,5 @@
 #include "frontend.h"
-#include "test_lexical.h"
+#include "test_syntatic.h"
 
 using std::istream;
 using std::ostream;
