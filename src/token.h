@@ -10,10 +10,12 @@ public:
 	enum class tclass_enum;
 	enum class ttype_enum { null, integer, real, lit };
 
+	static const char* tclass_string(token::tclass_enum tclass);
+
 	int line{ 0 }, column{ 0 };
 	std::string lexeme;
-	tclass_enum tclass;
-	ttype_enum ttype;
+	tclass_enum tclass{ tclass_enum::eof };
+	ttype_enum ttype{ ttype_enum::null };
 
 	token(const std::string& lexeme,
 		tclass_enum tclass,
@@ -32,6 +34,10 @@ public:
 		tclass(tclass),
 		ttype(ttype)
 	{}
+
+	token(tclass_enum tclass) : tclass(tclass) {}
+
+	token(){}
 
 	friend std::ostream& operator<<(std::ostream&, const token&);
 
@@ -73,7 +79,9 @@ public:
 		fim,
 		inteiro,
 		literal,
-		real
+		real,
+		MAX = real,
+		MIN = eof
 	};
 };
 

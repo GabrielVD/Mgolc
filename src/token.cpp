@@ -5,12 +5,11 @@ using std::string;
 using std::to_string;
 using std::ostream;
 
-const char* tclass_string(token::tclass_enum tclass, const string& lexeme);
 const char* ttype_string(token::ttype_enum);
 
 ostream& operator<<(ostream& os, const token& token)
 {
-	return os << "Classe: " << tclass_string(token.tclass, token.lexeme)
+	return os << "Classe: " << token::tclass_string(token.tclass)
 		<< ", Lexema: " << token.lexeme
 		<< ", Tipo: " << ttype_string(token.ttype);
 }
@@ -28,7 +27,7 @@ bool token::is_error() const
 
 string token::describe() const
 {
-	string msg{ tclass_string(tclass, lexeme) };
+	string msg{ tclass_string(tclass) };
 
 	switch (tclass)
 	{
@@ -69,7 +68,28 @@ string token::describe() const
 	return msg;
 }
 
-const char* tclass_string(token::tclass_enum tclass, const string& lexeme)
+const char* ttype_string(token::ttype_enum ttype)
+{
+	switch (ttype)
+	{
+	case token::ttype_enum::null:
+		return "Nulo";
+
+	case token::ttype_enum::integer:
+		return "Inteiro";
+
+	case token::ttype_enum::real:
+		return "Real";
+
+	case token::ttype_enum::lit:
+		return "Literal";
+	}
+
+	assert(false);
+	return "";
+}
+
+const char* token::tclass_string(token::tclass_enum tclass)
 {
 	switch (tclass)
 	{
@@ -131,37 +151,48 @@ const char* tclass_string(token::tclass_enum tclass, const string& lexeme)
 		return "ERRO7";
 
 	case token::tclass_enum::inicio:
+		return "inicio";
+
 	case token::tclass_enum::varinicio:
+		return "varinicio";
+
 	case token::tclass_enum::varfim:
+		return "varfim";
+
 	case token::tclass_enum::escreva:
+		return "escreva";
+
 	case token::tclass_enum::leia:
+		return "leia";
+
 	case token::tclass_enum::se:
+		return "se";
+
 	case token::tclass_enum::entao:
+		return "entao";
+
 	case token::tclass_enum::fimse:
+		return "fimse";
+
 	case token::tclass_enum::repita:
+		return "repita";
+
 	case token::tclass_enum::fimrepita:
+		return "fimrepita";
+
 	case token::tclass_enum::fim:
+		return "fim";
+
 	case token::tclass_enum::inteiro:
+		return "inteiro";
+
 	case token::tclass_enum::literal:
+		return "literal";
+
 	case token::tclass_enum::real:
-		return lexeme.c_str();
+		return "real";
 	}
-}
 
-const char* ttype_string(token::ttype_enum ttype)
-{
-	switch (ttype)
-	{
-	case token::ttype_enum::null:
-		return "Nulo";
-
-	case token::ttype_enum::integer:
-		return "Inteiro";
-
-	case token::ttype_enum::real:
-		return "Real";
-
-	case token::ttype_enum::lit:
-		return "Literal";
-	}
+	assert(false);
+	return "";
 }
