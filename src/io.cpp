@@ -16,7 +16,7 @@ void compile(const char* filename)
 		throw io_error(string("Error reading file: ") + filename);
 	}
 
-	string output_path(string(filename) + ".c");
+	string output_path(string(filename) + ".out");
 	ofstream output(output_path, ofstream::out);
 
 	if (!output.is_open())
