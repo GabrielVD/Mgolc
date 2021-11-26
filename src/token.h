@@ -37,12 +37,21 @@ public:
 
 	token(tclass_enum tclass) : tclass(tclass) {}
 
+	/**
+	* Identifier token constructor
+	*/
+	token(const std::string& lexeme) :
+		lexeme(lexeme),
+		tclass(tclass_enum::id)
+	{}
+
 	token(){}
 
 	friend std::ostream& operator<<(std::ostream&, const token&);
 
 	bool is_eof() const { return tclass == tclass_enum::eof; }
 	bool is_error() const;
+	bool is_id() const { return tclass == tclass_enum::id; }
 	std::string describe() const;
 
 	enum class tclass_enum
