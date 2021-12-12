@@ -174,10 +174,16 @@ token scanner::build_token(scanner::states last, symbol_table &symtable)
 
 	case scanner::states::id_accept:
 	{
-		auto id{ symtable.insert_query(token_lexeme) };
-		id.line = line;
-		id.column = column;
-		return id;
+		token t;
+		if (symtable.is_reserved(token_lexeme))
+		{
+			t = symtable.query(token_lexeme);
+		}
+		else { t = token(token_lexeme); }
+
+		t.line = line;
+		t.column = column;
+		return t;
 	}
 
 	case scanner::states::lit_string1_accept:
@@ -199,7 +205,6 @@ scanner::recognizer_t build_recognizer()
 {
 #define DIGIT '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
 #define LETTER 'A', 'a', 'B', 'b', 'C', 'c', 'D', 'd', 'E', 'e', 'F', 'f', 'G', 'g', 'H', 'h', 'I', 'i', 'J', 'j', 'K', 'k', 'L', 'l', 'M', 'm', 'N', 'n', 'O', 'o', 'P', 'p', 'Q', 'q', 'R', 'r', 'S', 's', 'T', 't', 'U', 'u', 'V', 'v', 'W', 'w', 'X', 'x', 'Y', 'y', 'Z', 'z'
-#define ALPHABET DIGIT, LETTER, '(', ')', '{', '}', '.', ';', '*', '/', '-', '+', '\n', '\t', ' ', '"', '\'', '_', '<', '>', '=', ','
 
 	scanner::recognizer_t recognizer(scanner::states::initial, scanner::states::sink);
 
@@ -231,12 +236,12 @@ scanner::recognizer_t build_recognizer()
 	recognizer.set_transition({ scanner::states::opr_less_accept }, scanner::states::opr_equal_accept, { '=', '>' });
 	recognizer.set_transition({ scanner::states::opr_less_accept }, scanner::states::rcb_accept, { '-' });
 	recognizer.set_transition({ scanner::states::opr_greater_accept }, scanner::states::opr_equal_accept, { '=' });
-	recognizer.set_transition({ scanner::states::comment0 }, scanner::states::comment0, { ALPHABET });
+	recognizer.fill_state_transition({ scanner::states::comment0 }, scanner::states::comment0);
 	recognizer.set_transition({ scanner::states::comment0 }, scanner::states::comment1_accept, { '}' });
 	recognizer.set_transition({ scanner::states::id_accept }, scanner::states::id_accept, { LETTER, DIGIT, '_' });
-	recognizer.set_transition({ scanner::states::lit_string0 }, scanner::states::lit_string0, { ALPHABET });
+	recognizer.fill_state_transition({ scanner::states::lit_string0 }, scanner::states::lit_string0);
 	recognizer.set_transition({ scanner::states::lit_string0 }, scanner::states::lit_string1_accept, { '"' });
-	recognizer.set_transition({ scanner::states::lit_char0 }, scanner::states::lit_char1, { ALPHABET });
+	recognizer.fill_state_transition({ scanner::states::lit_char0 }, scanner::states::lit_char1);
 	recognizer.set_transition({ scanner::states::lit_char0 }, scanner::states::error, { '\'' });
 	recognizer.set_transition({ scanner::states::lit_char1 }, scanner::states::lit_char2_accept, { '\'' });
 

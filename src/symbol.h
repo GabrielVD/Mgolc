@@ -17,12 +17,27 @@ private:
 public:
 	symbol_table();
 
-	token insert_query(const std::string& lexeme)
+	token& query(const std::string& lexeme)
 	{
-		return insert(
-				lexeme,
-				token(lexeme, token::tclass_enum::id, token::ttype_enum::null)
-			);
+		return token_map[lexeme];
+	}
+
+	bool is_reserved(const std::string& id)
+	{
+		auto i{ token_map.find(id) };
+		return i != token_map.end() && !i->second.is_id();
+	}
+
+	bool contains(const std::string& id)
+	{
+		return token_map.find(id) != token_map.end();
+	}
+
+	bool contains_typed(const std::string& id)
+	{
+		auto i{ token_map.find(id) };
+		return i != token_map.end()
+			&& i->second.ttype != token::ttype_enum::null;
 	}
 };
 
