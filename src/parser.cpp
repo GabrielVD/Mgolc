@@ -2,6 +2,7 @@
 #include "scanner.h"
 #include "goto.h"
 #include "action.h"
+#include "semantic.h"
 #include <stack>
 #include <algorithm>
 #include <optional>
@@ -14,32 +15,40 @@ using std::istream;
 using std::ostream;
 using std::stack;
 using std::string;
-using std::cout;
 using std::array;
 
 void print_production(const char*, ostream&);
 state_syntatic best_recovery(const vector<pair<state_syntatic, action>>& actions);
 
-class parser_data
+class parser_engine
 {
+public:
+	bool has_error{ false };
+
 private:
 	const action_table action_table;
 	const goto_table goto_table;
 	stack<state_syntatic> state_stack;
 	scanner scanner;
+	semantic semantic;
 	token terminal;
 	istream& source;
 	ostream& output;
+	ostream& prompt;
 	symbol_table& st;
 
 public:
-	parser_data(istream& source_, ostream& output_, symbol_table& st_) :
-		source(source_), output(output_), st(st_)
+	parser_engine(istream& source_, symbol_table& st_,
+		ostream& output_, ostream& prompt_) :
+		source(source_), st(st_), output(output_), prompt(prompt_)
 	{
 		state_stack.push(state_syntatic::s0);
 		terminal = scanner.next(source_, st_);
 	}
 
+	/**
+	* Returns true while there are more actions to process
+	*/
 	bool process_action();
 
 private:
@@ -53,10 +62,12 @@ private:
 	vector<state_syntatic> seek_panic_goto();
 };
 
-void parser(istream& source, ostream& output, symbol_table& st)
+bool parser(istream& source, symbol_table& st,
+	ostream& output, ostream& prompt)
 {
-	parser_data p(source, output, st);
+	parser_engine p(source, st, output, prompt);
 	while (p.process_action());
+	return p.has_error;
 }
 
 void print_production(const char *string, ostream& output)
@@ -64,13 +75,15 @@ void print_production(const char *string, ostream& output)
 	output << string << '\n';
 }
 
-bool parser_data::process_action()
+bool parser_engine::process_action()
 {
+	auto is_finished{ false };
 	auto action{ current() };
 	switch (action.type)
 	{
 	case action::types::error:
-		if (!handle_error()) { return false; }
+		has_error = true;
+		if (!handle_error()) { is_finished = true; }
 		break;
 
 	case action::types::shift:
@@ -82,40 +95,50 @@ bool parser_data::process_action()
 		break;
 
 	case action::types::accept:
-		print_production("P' --> P", output);
-		return false;
+		print_production("P' --> P", prompt);
+		is_finished = true;
+		break;
 	}
 
-	return true;
+	return !is_finished;
 }
 
-action parser_data::current() const
+action parser_engine::current() const
 {
 	return action_table.at(state_stack.top(), terminal.tclass);
 }
 
-token parser_data::next()
+token parser_engine::next()
 {
 	return scanner.next(source, st);
 }
 
-void parser_data::shift(state_syntatic state)
+void parser_engine::shift(state_syntatic state)
 {
+	semantic.push(terminal);
 	state_stack.push(state);
 	terminal = next();
 }
 
-void parser_data::reduce(production p)
+void parser_engine::reduce(production p)
 {
 	auto data{ production_data::of(p) };
-	for (int i = data.reduction_size; i-- > 0;) { state_stack.pop(); }
+	for (int i = data.reduction_size; i --> 0;) { state_stack.pop(); }
 	state_stack.push(goto_table.at(state_stack.top(), data.left_symbol));
-	print_production(data.string, output);
+	print_production(data.string, prompt);
+
+	has_error |= semantic.execute(p, st, output, prompt);
 }
 
-bool parser_data::handle_error()
+bool parser_engine::handle_error()
 {
 	print_error();
+
+	if (terminal.is_error())
+	{
+		terminal = next();
+		return true;
+	}
 
 	auto actions{ seek_panic_actions() };
 	auto can_recover{ !actions.empty() };
@@ -124,18 +147,18 @@ bool parser_data::handle_error()
 	return can_recover;
 }
 
-void parser_data::print_error() const
+void parser_engine::print_error() const
 {
 #define INT(x) static_cast<int>(x)
 #define TERM(x) static_cast<token::tclass_enum>(x)
 
 	if (terminal.is_error())
 	{
-		output << "Erro lexico: " << terminal.describe() << '\n';
+		prompt << "Erro lexico: " << terminal.describe() << '\n';
 		return;
 	}
 
-	output << "Erro sintatico: " << terminal.describe() << ". Esperava: ";
+	prompt << "Erro sintatico: " << terminal.describe() << ". Esperava: ";
 
 	auto state{ state_stack.top() };
 	auto comma{ false };
@@ -145,19 +168,19 @@ void parser_data::print_error() const
 	{
 		if (action_table.at(state, i).valid())
 		{
-			if (comma) { output << ", "; }
-			output << token::tclass_string(TERM(i));
+			if (comma) { prompt << ", "; }
+			prompt << token::tclass_string(TERM(i));
 			comma = true;
 		}
 	}
 
-	output << '\n';
+	prompt << '\n';
 
 #undef INT
 #undef TERM
 }
 
-vector<pair<state_syntatic, action>> parser_data::seek_panic_actions()
+vector<pair<state_syntatic, action>> parser_engine::seek_panic_actions()
 {
 	auto goto_list{ seek_panic_goto() };
 
@@ -177,7 +200,7 @@ vector<pair<state_syntatic, action>> parser_data::seek_panic_actions()
 	return action_list;
 }
 
-vector<state_syntatic> parser_data::seek_panic_goto()
+vector<state_syntatic> parser_engine::seek_panic_goto()
 {
 	vector<state_syntatic> goto_list;
 	while (true)
@@ -185,6 +208,7 @@ vector<state_syntatic> parser_data::seek_panic_goto()
 		goto_list = goto_table.valid_for(state_stack.top());
 		if (!goto_list.empty()) { break; }
 		state_stack.pop();
+		semantic.pop();
 	}
 
 	return goto_list;

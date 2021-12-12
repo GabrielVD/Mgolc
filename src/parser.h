@@ -4,6 +4,10 @@
 #include "symbol.h"
 #include <istream>
 
-void parser(std::istream& source, std::ostream& output, symbol_table&);
+/**
+* Returns true on error
+*/
+bool parser(std::istream& source, symbol_table&,
+	std::ostream& output, std::ostream& prompt);
 
 #endif
